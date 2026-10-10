@@ -226,6 +226,7 @@ document.addEventListener('click', startBGM);
 // --- Mobile UX Interactions ---
 document.querySelector('#menuBtn')?.addEventListener('click', () => {
   document.querySelector('.players-panel')?.classList.toggle('show');
+  document.querySelector('.log-panel')?.classList.toggle('show');
 });
 
 const endTurnEl = document.querySelector('#endTurn') as HTMLElement;
@@ -348,7 +349,6 @@ if(endTurnEl) {
       if (!panelIsDragging) return;
       panelIsDragging = false;
       actionScroll.style.transition = 'transform 0.3s ease';
-      swipeHint.style.opacity = '0';
       
       if (swipeTranslate > window.innerWidth * 0.25) {
         // Trigger end turn
@@ -357,10 +357,14 @@ if(endTurnEl) {
           triggerEndTurn();
           actionScroll.style.transform = 'translateX(0px)';
           swipeTranslate = 0;
+          swipeHint.style.opacity = '0';
+          swipeHint.style.background = 'transparent';
         }, 300);
       } else {
         actionScroll.style.transform = 'translateX(0px)';
         swipeTranslate = 0;
+        swipeHint.style.opacity = '0';
+        swipeHint.style.background = 'transparent';
       }
     });
   }
