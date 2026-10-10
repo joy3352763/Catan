@@ -143,10 +143,13 @@ function endAITurn(){if(state.phase==='over')return;state.currentPlayer=(state.c
 function showModal(html:string){const modal=document.querySelector<HTMLElement>('#modal')!;document.querySelector('#modalContent')!.innerHTML=html;modal.classList.remove('hidden');document.querySelector('#playAgain')?.addEventListener('click',()=>{modal.classList.add('hidden');resetGame();});}
 function resetGame(){state=newGame();buildMode=null;selectedRobber=false;buildBoard();renderUI();scheduleAI();}
 (document.querySelector('#restart') as HTMLButtonElement).addEventListener('click',()=>{if(confirm('確定要重新開始這座島嗎？目前進度將會消失。'))resetGame();});
+let audioCtx: AudioContext | null = null;
 function playDiceSound(){
   const sfx=document.querySelector('#sfxToggle') as HTMLInputElement;
   if(sfx && !sfx.checked) return;
-  const ctx=new (window.AudioContext||(window as any).webkitAudioContext)();
+  if(!audioCtx) audioCtx = new (window.AudioContext||(window as any).webkitAudioContext)();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  const ctx = audioCtx;
   const hit=(time:number,pitch:number,dur:number)=>{
     const osc=ctx.createOscillator();const gain=ctx.createGain();
     osc.connect(gain);gain.connect(ctx.destination);
@@ -183,7 +186,7 @@ document.querySelector('#zoomIn')!.addEventListener('click',()=>{camera.position
 buildBoard();renderUI();scheduleAI();
 
 // --- Background Music Logic ---
-const bgm = new Audio('/bgm.mp3');
+const bgm = new Audio(import.meta.env.BASE_URL + 'bgm.mp3');
 bgm.loop = true;
 const bgmVolume = document.querySelector('#bgmVolume') as HTMLInputElement;
 const bgmToggle = document.querySelector('#bgmToggle') as HTMLInputElement;
