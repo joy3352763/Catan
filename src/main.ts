@@ -9,7 +9,12 @@ app.innerHTML=`
   <header class="topbar"><div class="brand"><button id="menuBtn" class="menu-btn">≡</button><div class="brand-icon">🌿</div><div><div class="brand-title">森友拓荒島</div><div class="brand-sub">COZY CATAN · 3D ISLAND ADVENTURE</div></div></div><div class="top-actions"><label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;"><input type="checkbox" id="sfxToggle" checked>音效</label><label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;"><input type="checkbox" id="bgmToggle" checked>音樂</label><input type="range" id="bgmVolume" min="0" max="1" step="0.01" value="0.35" style="width:60px;margin-right:12px;" title="音樂音量"><span class="pill">✦ 單人拓荒模式</span><button id="restart" class="soft-button">↻ 重新開始</button></div></header>
   <main class="layout"><section class="board-panel"><div class="board-heading"><div><div class="eyebrow">YOUR LITTLE ISLAND</div><h1>一起打造理想小島</h1><p>收集資源、修築道路，讓島嶼慢慢熱鬧起來。</p></div><div class="turn-card"><div class="turn-dot" id="turnDot"></div><div><small>目前回合</small><strong id="turnName">你</strong></div><div class="dice-chip" id="diceValue">🎲 —</div></div></div><div id="scene-wrap"><div id="scene"></div><div class="scene-hint" id="sceneHint">點擊交叉點放置村莊</div><div class="zoom-controls"><button id="zoomIn" aria-label="放大">＋</button><button id="zoomOut" aria-label="縮小">−</button><button id="resetView" aria-label="重設視角">⌂</button></div></div><div class="legend"><span><i class="dot forest"></i>森林</span><span><i class="dot hills"></i>丘陵</span><span><i class="dot field"></i>麥田</span><span><i class="dot pasture"></i>牧場</span><span><i class="dot mountain"></i>山脈</span><span><i class="dot desert"></i>沙漠</span></div></section>
   <aside class="sidebar"><section class="panel resource-panel"><div class="section-title"><h2>你的背包</h2><span class="tiny-label">RESOURCES</span></div><div class="resource-grid" id="resources"></div><div class="hand-total"><span>手牌總數</span><strong id="handTotal">0 張</strong></div></section>
-  <section class="panel action-panel"><div class="section-title"><h2>島嶼行動</h2><span class="tiny-label" id="phaseTag">初始配置</span></div><p class="status-message" id="statusMessage">選擇一個空的交叉點，放置第一座村莊。</p><div class="action-grid"><button class="action-button primary" id="rollBtn"><span>🎲</span><b>擲骰子</b><small>開始你的回合</small></button><button class="action-button" id="buildRoad"><span>🛤️</span><b>修築道路</b><small>🪵 1 + 🧱 1</small></button><button class="action-button" id="buildVillage"><span>🏡</span><b>建造村莊</b><small>木、磚、小麥、羊</small></button><button class="action-button" id="buildCity"><span>🏘️</span><b>升級城市</b><small>🌾 2 + ⛰️ 3</small></button></div><div class="trade-row"><div><b>銀行交易</b><small>4 張相同資源換 1 張</small></div><button id="tradeBtn" class="outline-button">交換資源</button></div><div id="endTurn" class="slide-to-end disabled"><div class="slide-text">滑動結束回合 ❯❯</div><div class="slide-thumb">➜</div></div></section>
+  <section class="panel action-panel">
+      <div id="swipeEndHint" class="swipe-end-hint"><span>👉 滑動結束回合</span></div>
+      <div id="actionScroll" class="action-panel-scroll">
+        <div class="section-title"><h2>島嶼行動</h2><span class="tiny-label" id="phaseTag">初始配置</span></div><p class="status-message" id="statusMessage">選擇一個空的交叉點，放置第一座村莊。</p><div class="action-grid"><button class="action-button primary" id="rollBtn"><span>🎲</span><b>擲骰子</b><small>開始你的回合</small></button><button class="action-button" id="buildRoad"><span>🛤️</span><b>修築道路</b><small>🪵 1 + 🧱 1</small></button><button class="action-button" id="buildVillage"><span>🏡</span><b>建造村莊</b><small>木、磚、小麥、羊</small></button><button class="action-button" id="buildCity"><span>🏘️</span><b>升級城市</b><small>🌾 2 + ⛰️ 3</small></button></div><div class="trade-row"><div><b>銀行交易</b><small>4 張相同資源換 1 張</small></div><button id="tradeBtn" class="outline-button">交換資源</button></div><div id="endTurn" class="slide-to-end disabled"><div class="slide-text">滑動結束回合 ❯❯</div><div class="slide-thumb">➜</div></div>
+      </div>
+    </section>
   <section class="panel players-panel"><div class="section-title"><h2>島民夥伴</h2><span class="tiny-label">4 PLAYERS</span></div><div id="players"></div></section>
   <section class="panel log-panel"><div class="section-title"><h2>島嶼日誌</h2><span class="tiny-label">RECENT EVENTS</span></div><div id="logList" class="log-list"></div></section></aside></main>
   <footer><span>🌱 慢慢建設，也是一種冒險。</span><span>Prototype v0.1 · Three.js + TypeScript</span></footer>
@@ -238,25 +243,24 @@ if(endTurnEl) {
     renderUI();scheduleAI();
   };
 
-  thumb.addEventListener('touchstart', (e) => {
+  const handleStart = (clientX: number) => {
     if(endTurnEl.classList.contains('disabled')) return;
     isDragging = true;
-    startX = e.touches[0].clientX;
+    startX = clientX;
     thumb.style.transition = 'none';
     text.style.opacity = '0.3';
-  });
+  };
 
-  thumb.addEventListener('touchmove', (e) => {
+  const handleMove = (clientX: number) => {
     if(!isDragging) return;
-    e.preventDefault(); // Prevent scrolling while sliding
-    let x = e.touches[0].clientX - startX;
+    let x = clientX - startX;
     const max = endTurnEl.clientWidth - thumb.clientWidth - 4;
     if(x < 0) x = 0;
     if(x > max) x = max;
     thumb.style.transform = `translateX(${x}px)`;
-  }, { passive: false });
+  };
 
-  thumb.addEventListener('touchend', (e) => {
+  const handleEnd = () => {
     if(!isDragging) return;
     isDragging = false;
     thumb.style.transition = 'transform 0.3s ease';
@@ -276,8 +280,91 @@ if(endTurnEl) {
     } else {
       thumb.style.transform = 'translateX(0px)';
     }
+  };
+
+  thumb.addEventListener('touchstart', (e) => {
+    handleStart(e.touches[0].clientX);
+  }, { passive: true });
+
+  thumb.addEventListener('touchmove', (e) => {
+    if(!isDragging) return;
+    e.preventDefault(); // Prevent scrolling while sliding
+    handleMove(e.touches[0].clientX);
+  }, { passive: false });
+
+  thumb.addEventListener('touchend', () => {
+    handleEnd();
+  });
+
+  thumb.addEventListener('mousedown', (e) => {
+    handleStart(e.clientX);
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if(isDragging) handleMove(e.clientX);
+  });
+
+  window.addEventListener('mouseup', () => {
+    if(isDragging) handleEnd();
   });
   
+
+  // Mobile swipe-to-end on the action panel
+  const actionScroll = document.querySelector('#actionScroll') as HTMLElement;
+  const swipeHint = document.querySelector('#swipeEndHint') as HTMLElement;
+  if(actionScroll && swipeHint) {
+    let panelStartX = 0;
+    let panelIsDragging = false;
+    let swipeTranslate = 0;
+
+    actionScroll.addEventListener('touchstart', (e) => {
+      if (window.innerWidth > 800) return; // Only mobile portrait/HUD
+      if (document.querySelector('#endTurn')?.classList.contains('disabled')) return;
+      if (actionScroll.scrollLeft > 0) return; // Must be at left edge
+      panelIsDragging = true;
+      panelStartX = e.touches[0].clientX;
+      actionScroll.style.transition = 'none';
+      swipeHint.style.opacity = '1';
+    }, { passive: true });
+
+    actionScroll.addEventListener('touchmove', (e) => {
+      if (!panelIsDragging) return;
+      let diff = e.touches[0].clientX - panelStartX;
+      if (diff > 0) {
+        // Swiping right at the left edge
+        if (e.cancelable) e.preventDefault(); // Prevent bounce/scroll
+        swipeTranslate = diff * 0.6; // add some friction
+        const maxTranslate = window.innerWidth * 0.4;
+        if (swipeTranslate > maxTranslate) swipeTranslate = maxTranslate;
+        
+        actionScroll.style.transform = `translateX(${swipeTranslate}px)`;
+        const progress = Math.min(swipeTranslate / (window.innerWidth * 0.25), 1);
+        swipeHint.style.background = `rgba(77, 128, 91, ${progress * 0.9})`;
+        swipeHint.style.color = progress > 0.5 ? 'white' : '#4d805b';
+      }
+    }, { passive: false });
+
+    actionScroll.addEventListener('touchend', () => {
+      if (!panelIsDragging) return;
+      panelIsDragging = false;
+      actionScroll.style.transition = 'transform 0.3s ease';
+      swipeHint.style.opacity = '0';
+      
+      if (swipeTranslate > window.innerWidth * 0.25) {
+        // Trigger end turn
+        actionScroll.style.transform = `translateX(${window.innerWidth}px)`;
+        setTimeout(() => {
+          triggerEndTurn();
+          actionScroll.style.transform = 'translateX(0px)';
+          swipeTranslate = 0;
+        }, 300);
+      } else {
+        actionScroll.style.transform = 'translateX(0px)';
+        swipeTranslate = 0;
+      }
+    });
+  }
+
   // Keep original click for desktop users
   thumb.addEventListener('click', () => {
     if(!endTurnEl.classList.contains('disabled')) triggerEndTurn();
