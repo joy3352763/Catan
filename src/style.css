@@ -52,7 +52,11 @@
   .zoom-controls { bottom: 85px; right: 10px; z-index: 40; }
 }
 
-/* --- New features --- */
+
+/* Desktop base styles for wrappers */
+.swipe-end-hint { display: none; }
+.action-panel-scroll { display: contents; }
+\n/* --- New features --- */
 .menu-btn { display: none; background: none; border: none; font-size: 28px; cursor: pointer; padding: 0 10px; color: #4b5e4d; }
 @media (max-width: 800px) {
   .menu-btn { display: block; }
