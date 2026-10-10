@@ -6,3 +6,154 @@
 .log-list{max-height:220px;overflow-y:auto;padding-right:4px}
 .alert-list{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:8px;text-align:left}
 .alert-list li{background:#fff1ea;border:1px solid #f1c7b6;color:#8a3f2a;border-radius:10px;padding:9px 12px;font-size:13px;line-height:1.5}
+
+/* =========================================================
+   Mobile HUD Mode (Direction 1: Fullscreen 3D + Floating UI)
+   ========================================================= */
+@media (max-width: 800px) {
+  /* Lock the viewport to prevent page scrolling */
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    position: fixed;
+  }
+
+  .shell {
+    padding: 0 !important;
+    height: 100vh;
+    display: block;
+    overflow: hidden;
+  }
+
+  /* Make the 3D scene fill the entire screen */
+  .layout {
+    display: block !important;
+    margin: 0; padding: 0;
+    height: 100vh;
+  }
+
+  .board-panel {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    z-index: 1;
+  }
+
+  #scene-wrap {
+    height: 100vh !important;
+    min-height: 100vh !important;
+    border-radius: 0;
+  }
+
+  /* Floating Topbar */
+  .topbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    padding: 8px 12px;
+    margin: 0 !important;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  /* Floating UI Layer */
+  .sidebar {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: block !important;
+    pointer-events: none; /* Let touches pass through to the 3D scene */
+    z-index: 50;
+  }
+
+  .panel {
+    pointer-events: auto; /* Re-enable touches for UI panels */
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.4);
+    position: absolute;
+  }
+
+  /* 1. Turn Card (Top Left) */
+  .board-heading {
+    position: absolute;
+    top: 60px;
+    left: 10px;
+    z-index: 60;
+    pointer-events: none;
+  }
+  .board-heading > div:first-child { display: none; } /* Hide Title texts */
+  .turn-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin: 0 !important;
+    padding: 8px 12px;
+  }
+
+  /* 2. Resource Panel (Top Right) */
+  .resource-panel {
+    top: 60px;
+    right: 10px;
+    width: auto;
+    padding: 8px !important;
+    border-radius: 12px;
+  }
+  .resource-panel .section-title { display: none; }
+  .resource-grid {
+    display: flex;
+    gap: 4px;
+  }
+  .resource-card {
+    padding: 4px 8px;
+    flex-direction: row;
+    gap: 4px;
+    background: transparent;
+    box-shadow: none;
+  }
+  .resource-card span { font-size: 16px; }
+  .resource-card small { display: none; }
+  .resource-card strong { font-size: 14px; }
+  .hand-total { display: none; }
+
+  /* 3. Action Panel (Bottom Center) */
+  .action-panel {
+    bottom: 20px;
+    left: 10px;
+    right: 10px;
+    padding: 12px !important;
+    border-radius: 20px;
+  }
+  .action-panel .section-title { display: none; }
+  .action-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 4px;
+  }
+  .action-button {
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    min-width: 80px;
+  }
+  .action-button span { font-size: 18px; margin-bottom: 2px; }
+  .action-button b { font-size: 13px; }
+  .action-button small { display: none; } /* Save space */
+  .trade-row { margin-top: 8px; }
+
+  /* 4. Hide less critical panels to maximize 3D view */
+  .players-panel, .log-panel, .legend, footer {
+    display: none !important;
+  }
+
+  /* Adjust zoom controls position so they don't overlap with action panel */
+  .zoom-controls {
+    bottom: 160px;
+    right: 10px;
+    z-index: 40;
+  }
+}
