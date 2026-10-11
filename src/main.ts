@@ -68,17 +68,21 @@ function buildBoard(){disposeGroup(boardGroup);disposeGroup(piecesGroup);dispose
   // Beach rocks and tiny decorative shrubs around the coast.
   for(let i=0;i<40;i++){const a=i/40*Math.PI*2;const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.12+Math.random()*.1,0),mat(i%2?'#f0e4c8':'#a4d7ca'));rock.position.set(Math.cos(a)*9.1,-.03,Math.sin(a)*8.7);rock.scale.y=.55;boardGroup.add(rock);}
   refreshPieces();}
-function portLabel(port:Port){return port.type==='any'?'⚓ 3:1':`${RESOURCE_INFO[port.type].icon} 2:1`;}
-// Harbor: two wooden piers from the harbor's coastal vertices out to a small seaward platform with a flag pole.
+function portLabel(port:Port){return port.type==='any'?'⚓ 港口':`${RESOURCE_INFO[port.type].icon} 港口`;}
+// Harbor: two coastal mooring posts at harbor vertices, and a floating buoy platform in the nearshore water.
+// Sea channels and future ship lanes remain completely unobstructed (no diagonal bridges slicing through water).
 function buildPort(port:Port){const wood=mat('#a77b52'),dark=mat('#7d5a3c');const y=.3;
-  const px=port.x+port.nx*.78,pz=port.z+port.nz*.78;
-  for(const vid of [port.a,port.b]){const v=state.board.vertices.get(vid)!;const dx=px-v.x,dz=pz-v.z,len=Math.hypot(dx,dz);
-    const plank=new THREE.Mesh(new THREE.BoxGeometry(.12,.04,len),wood);plank.position.set((v.x+px)/2,y,(v.z+pz)/2);plank.rotation.y=Math.atan2(dx,dz);plank.castShadow=true;boardGroup.add(plank);}
-  const deck=new THREE.Mesh(new THREE.BoxGeometry(.62,.06,.42),wood);deck.position.set(px,y,pz);deck.rotation.y=Math.atan2(port.nx,port.nz);deck.castShadow=true;deck.receiveShadow=true;boardGroup.add(deck);
-  for(const s of [-1,1]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.5,6),dark);leg.position.set(px+port.nz*.26*s,y-.25,pz-port.nx*.26*s);boardGroup.add(leg);}
-  const fx=px+port.nx*.12,fz=pz+port.nz*.12;const pole=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.75,6),dark);pole.position.set(fx,y+.37,fz);boardGroup.add(pole);
+  const px=port.x+port.nx*.65,pz=port.z+port.nz*.65;
+  for(const vid of [port.a,port.b]){const v=state.board.vertices.get(vid)!;
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(.05,.055,.24,6),dark);post.position.set(v.x,.42,v.z);post.castShadow=true;boardGroup.add(post);
+    const cap=new THREE.Mesh(new THREE.SphereGeometry(.06,6,5),wood);cap.position.set(v.x,.54,v.z);boardGroup.add(cap);
+    const dx=px-v.x,dz=pz-v.z,dlen=Math.hypot(dx,dz)||1;
+    const cleat=new THREE.Mesh(new THREE.BoxGeometry(.09,.04,.16),wood);cleat.position.set(v.x+dx/dlen*.13,y+.04,v.z+dz/dlen*.13);cleat.rotation.y=Math.atan2(dx,dz);boardGroup.add(cleat);}
+  const deck=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.08,12),wood);deck.position.set(px,y,pz);deck.castShadow=true;deck.receiveShadow=true;boardGroup.add(deck);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.33,.03,6,16),dark);ring.position.set(px,y,pz);ring.rotation.x=Math.PI/2;boardGroup.add(ring);
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.75,6),dark);pole.position.set(px,y+.37,pz);boardGroup.add(pole);
   const color=port.type==='any'?'#5f8fb0':RESOURCE_INFO[port.type].color;
-  const flag=makeTextSprite(portLabel(port),'#fffaf0',color);flag.position.set(fx,y+.95,fz);flag.scale.set(.95,.48,1);boardGroup.add(flag);}
+  const flag=makeTextSprite(portLabel(port),'#fffaf0',color);flag.position.set(px,y+.95,pz);flag.scale.set(.95,.48,1);boardGroup.add(flag);}
 function refreshPieces(){disposeGroup(piecesGroup);for(const p of state.players){for(const v of p.settlements){const pt=state.board.vertices.get(v)!;const base=new THREE.Mesh(new THREE.CylinderGeometry(.22,.28,.2,6),mat(p.color));base.position.set(pt.x,.48,pt.z);base.castShadow=true;piecesGroup.add(base);const roof=new THREE.Mesh(new THREE.ConeGeometry(.28,.3,4),mat(p.color));roof.position.set(pt.x,.72,pt.z);roof.rotation.y=Math.PI/4;roof.castShadow=true;piecesGroup.add(roof);const door=new THREE.Mesh(new THREE.BoxGeometry(.07,.11,.025),mat('#fff0cf'));door.position.set(pt.x,.47,pt.z+.23);piecesGroup.add(door);}
   for(const v of p.cities){const pt=state.board.vertices.get(v)!;const base=new THREE.Mesh(new THREE.BoxGeometry(.42,.3,.35),mat(p.color));base.position.set(pt.x,.54,pt.z);base.castShadow=true;piecesGroup.add(base);const roof=new THREE.Mesh(new THREE.ConeGeometry(.31,.3,4),mat('#f6e4c4'));roof.position.set(pt.x,.83,pt.z);roof.rotation.y=Math.PI/4;piecesGroup.add(roof);}
   for(const eid of p.roads){const e=state.board.edges.get(eid)!;const va=state.board.vertices.get(e.a)!,vb=state.board.vertices.get(e.b)!;const start=new THREE.Vector3(va.x,.49,va.z),end=new THREE.Vector3(vb.x,.49,vb.z);const dir=new THREE.Vector3().subVectors(end,start);const road=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,dir.length(),7),mat(p.color));road.position.copy(start).add(end).multiplyScalar(.5);road.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());road.castShadow=true;piecesGroup.add(road);}}
