@@ -53,10 +53,23 @@
 }
 
 
-/* Desktop base styles for wrappers */
-.swipe-end-hint { display: none; }
-.action-panel-scroll { display: contents; }
-\n/* --- New features --- */
+/* Desktop base styles for wrappers (scoped so they don't override the mobile HUD rules above) */
+@media (min-width: 801px) {
+  .swipe-end-hint { display: none; }
+  .action-panel-scroll { display: contents; }
+}
+
+/* Owned harbors under the resource panel */
+.port-list { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; font-size: 11px; color: #879285; }
+.port-list:empty { display: none; }
+.port-list b { background: #eef5fa; border: 1px solid #d3e3ee; color: #4f6f86; border-radius: 99px; padding: 3px 8px; font-size: 11px; }
+@media (max-width: 800px) {
+  .port-list { margin-top: 4px; justify-content: flex-end; }
+  .port-list span { display: none; }
+  .port-list b { padding: 2px 6px; font-size: 10px; }
+}
+
+/* --- New features --- */
 .menu-btn { display: none; background: none; border: none; font-size: 28px; cursor: pointer; padding: 0 10px; color: #4b5e4d; }
 @media (max-width: 800px) {
   .menu-btn { display: block; }
