@@ -30,7 +30,7 @@ scene.add(new THREE.HemisphereLight(0xffffff,0x8eb5a1,2.1));const sun=new THREE.
 const ocean=new THREE.Mesh(new THREE.CylinderGeometry(11.7,11.7,.35,96),new THREE.MeshStandardMaterial({color:'#76c9c7',roughness:.8}));ocean.position.y=-.42;ocean.receiveShadow=true;scene.add(ocean);
 const islandBase=new THREE.Mesh(new THREE.CylinderGeometry(9.6,9.2,.7,96),new THREE.MeshStandardMaterial({color:'#d7c29a',roughness:1}));islandBase.position.y=-.1;islandBase.receiveShadow=true;scene.add(islandBase);
 const boardGroup=new THREE.Group();scene.add(boardGroup);const piecesGroup=new THREE.Group();scene.add(piecesGroup);const markerGroup=new THREE.Group();scene.add(markerGroup);
-let state:GameState=newGame();let buildMode:'road'|'settlement'|'city'|null=null;let selectedRobber=false;let hitObjects:THREE.Object3D[]=[];let objectAction=new Map<THREE.Object3D,{kind:'vertex'|'edge'|'tile';id:string}>();let vertexMeshes=new Map<string,THREE.Mesh>();let edgeMeshes=new Map<string,THREE.Mesh>();let tileMeshes=new Map<string,THREE.Mesh>();
+let state:GameState=newGame();let buildMode:'road'|'settlement'|'city'|null=null;let selectedRobber=false;let hitObjects:THREE.Object3D[]=[];let objectAction=new Map<THREE.Object3D,{kind:'vertex'|'edge'|'tile';id:string}>();let vertexMeshes=new Map<string,THREE.Mesh>();let edgeMeshes=new Map<string,THREE.Mesh>();let tileMeshes=new Map<string,THREE.Mesh>();let hintMats:THREE.MeshStandardMaterial[]=[];
 const terrainColors:Record<Terrain,string>={wood:'#4d956b',brick:'#cf846a',wheat:'#e9c75f',wool:'#a7cb8d',ore:'#899baa',desert:'#dfc58c'};
 const tileNames:Record<Terrain,string>={wood:'森林',brick:'丘陵',wheat:'麥田',wool:'牧場',ore:'山脈',desert:'沙漠'};
 function mat(color:string,roughness=.8){return new THREE.MeshStandardMaterial({color,roughness});}
@@ -90,7 +90,7 @@ const raycaster=new THREE.Raycaster();const pointer=new THREE.Vector2();let poin
 renderer.domElement.addEventListener('pointerdown',(e:PointerEvent)=>{pointerDownPos={x:e.clientX,y:e.clientY};});
 renderer.domElement.addEventListener('pointerup',(e:PointerEvent)=>{if(Math.abs(e.clientX-pointerDownPos.x)>5||Math.abs(e.clientY-pointerDownPos.y)>5)return;const rect=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-rect.left)/rect.width)*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(hitObjects,false);if(!hits.length)return;const want=wantedKind();const hit=(want&&hits.find(h=>objectAction.get(h.object)?.kind===want))||hits[0];const action=objectAction.get(hit.object);if(action)handleBoardClick(action.kind,action.id);});
 function wantedKind():'vertex'|'edge'|'tile'|null{if(state.phase==='setup-settlement')return 'vertex';if(state.phase==='setup-road')return 'edge';if(state.phase==='robber')return 'tile';if(buildMode==='road')return 'edge';if(buildMode==='settlement'||buildMode==='city')return 'vertex';return null;}
-function animate(){requestAnimationFrame(animate);if(hintMats.length){const o=.3+.3*(Math.sin(performance.now()/260)+1)/2;for(const m of hintMats)m.opacity=o;}controls.update();renderer.render(scene,camera);}animate();
+function animate(){requestAnimationFrame(animate);if(hintMats.length){const o=.3+.3*(Math.sin(performance.now()/260)+1)/2;for(const m of hintMats)m.opacity=o;}controls.update();renderer.render(scene,camera);}
 function addLog(msg:string){log(state,msg);renderUI();}
 function current(){return state.players[state.currentPlayer];}
 function setupPlayer(){return state.players[state.setupOrder[state.setupIndex]??0];}
@@ -107,7 +107,6 @@ function handleBoardClick(kind:'vertex'|'edge'|'tile',id:string){const p=current
 }
 function toast(msg:string){const hint=document.querySelector<HTMLElement>('#sceneHint')!;hint.textContent=msg;hint.classList.add('show');window.setTimeout(()=>hint.classList.remove('show'),2200);}
 // --- Build hints: translucent "ghost" pieces showing every legal spot for the current action ---
-let hintMats:THREE.MeshStandardMaterial[]=[];
 function ghostMat(color='#8f9a96'){const m=new THREE.MeshStandardMaterial({color,roughness:.7,transparent:true,opacity:.5,depthWrite:false});hintMats.push(m);return m;}
 function ghostSettlement(x:number,z:number){const b=new THREE.Mesh(new THREE.CylinderGeometry(.22,.28,.2,6),ghostMat());b.position.set(x,.48,z);markerGroup.add(b);const r=new THREE.Mesh(new THREE.ConeGeometry(.28,.3,4),ghostMat());r.position.set(x,.72,z);r.rotation.y=Math.PI/4;markerGroup.add(r);}
 function ghostCity(x:number,z:number){const b=new THREE.Mesh(new THREE.BoxGeometry(.5,.36,.42),ghostMat('#f2c14e'));b.position.set(x,.56,z);markerGroup.add(b);const r=new THREE.Mesh(new THREE.ConeGeometry(.36,.32,4),ghostMat('#f2c14e'));r.position.set(x,.9,z);r.rotation.y=Math.PI/4;markerGroup.add(r);const ring=new THREE.Mesh(new THREE.TorusGeometry(.38,.035,8,32),ghostMat('#f2c14e'));ring.rotation.x=-Math.PI/2;ring.position.set(x,.4,z);markerGroup.add(ring);}
@@ -223,7 +222,7 @@ document.querySelector('#tradeBtn')!.addEventListener('click',()=>{
 document.querySelector('#modalClose')!.addEventListener('click',()=>{document.querySelector('#modal')!.classList.add('hidden');document.querySelector('#modalContent')!.innerHTML='';});
 document.querySelector('#zoomIn')!.addEventListener('click',()=>{camera.position.multiplyScalar(.9);controls.update();});document.querySelector('#zoomOut')!.addEventListener('click',()=>{camera.position.multiplyScalar(1.1);controls.update();});document.querySelector('#resetView')!.addEventListener('click',()=>{camera.position.set(11,16,17);controls.target.set(0,0,0);controls.update();});
 // Keep the turn engine and rendering separate: the board responds only to game-state changes.
-buildBoard();renderUI();scheduleAI();
+buildBoard();renderUI();scheduleAI();animate();
 
 // --- Background Music Logic ---
 const bgm = new Audio(import.meta.env.BASE_URL + 'bgm.mp3');
